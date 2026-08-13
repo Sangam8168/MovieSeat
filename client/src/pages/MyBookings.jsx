@@ -7,6 +7,7 @@ import { dateFormat } from '../lib/dateFormat';
 import { useAppContext } from '../context/AppContext';
 import SmartImage from '../components/SmartImage';
 import { Link } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
 
 const MyBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY
@@ -63,7 +64,23 @@ const MyBookings = () => {
         <div className='flex flex-col md:items-end md:text-right justify-between p-4'>
           <div className='flex items-center gap-4'>
             <p className='text-2xl font-semibold mb-3'>{currency}{item.amount}</p>
-            {!item.isPaid && <Link to={item.paymentLink} className='bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer'>Pay Now</Link>}
+            {item.isPaid ? (
+              <span className='flex items-center gap-1.5 mb-3 px-3 py-1.5 text-xs font-medium rounded-full bg-green-500/15 text-green-400 border border-green-500/30'>
+                <CheckCircle2 className='w-3.5 h-3.5' />
+                Paid
+              </span>
+            ) : item.paymentLink ? (
+              <Link
+                to={item.paymentLink}
+                className='bg-primary hover:bg-primary-dull transition px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer'
+              >
+                Pay Now
+              </Link>
+            ) : (
+              <span className='mb-3 px-3 py-1.5 text-xs rounded-full bg-gray-700/40 text-gray-400 border border-gray-600'>
+                Payment pending
+              </span>
+            )}
           </div>
           <div className='text-sm'>
             <p><span className='text-gray-400'>Total Tickets:</span> {item.bookedSeats.length}</p>

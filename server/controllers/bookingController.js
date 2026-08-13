@@ -1,5 +1,8 @@
 import { sendEvent } from "../inngest/index.js";
-import { markBookingPaid } from "../services/bookingPayment.js";
+import {
+  markBookingPaid,
+  releaseStaleBookings,
+} from "../services/bookingPayment.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import stripe from "stripe";
@@ -27,6 +30,9 @@ export const createBooking = async (req, res) => {
     const userId = req.user._id.toString();
     const { showId, selectedSeats } = req.body;
     const { origin } = req.headers;
+
+    // Free any seats held by abandoned checkouts before checking availability
+    await releaseStaleBookings(showId);
 
     // Check if the seat is available for the selected show
     const isAvailable = await checkSeatsAvailability(showId, selectedSeats);
@@ -128,6 +134,9 @@ export const createBooking = async (req, res) => {
 export const getOccupiedSeats = async (req, res) => {
   try {
     const { showId } = req.params;
+
+    await releaseStaleBookings(showId);
+
     const showData = await Show.findById(showId);
 
     const occupiedSeats = Object.keys(showData.occupiedSeats);
