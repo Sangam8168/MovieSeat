@@ -37,14 +37,42 @@ const releaseBooking = async (bookingId) => {
   console.log(`[stripe] booking ${bookingId} released`);
 };
 
+/**
+ * Stripe verifies the signature against the exact raw bytes. Locally
+ * express.raw() supplies a Buffer, but some serverless runtimes parse the
+ * JSON before Express runs, so fall back to whatever raw form is available.
+ * Returns null when the body has already been parsed and is unrecoverable.
+ */
+const getRawBody = (request) => {
+  if (Buffer.isBuffer(request.body)) return request.body;
+  if (Buffer.isBuffer(request.rawBody)) return request.rawBody;
+  if (typeof request.rawBody === "string") return Buffer.from(request.rawBody);
+  if (typeof request.body === "string") return Buffer.from(request.body);
+  return null;
+};
+
 export const stripeWebhooks = async (request, response) => {
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
   const sig = request.headers["stripe-signature"];
 
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("[stripe] STRIPE_WEBHOOK_SECRET is not set");
+    return response.status(500).send("Webhook secret not configured");
+  }
+
+  const rawBody = getRawBody(request);
+  if (!rawBody) {
+    console.error(
+      "[stripe] raw body unavailable - the platform parsed it before Express. " +
+        "Signature cannot be verified."
+    );
+    return response.status(400).send("Webhook Error: raw body unavailable");
+  }
+
   let event;
   try {
     event = stripeInstance.webhooks.constructEvent(
-      request.body,
+      rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
