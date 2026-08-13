@@ -20,7 +20,27 @@ import { stripeWebhooks } from "./controllers/stripeWebhooks.js";
 const app = express();
 const port = 3000;
 
-await connectDB();
+// Serverless has no startup phase, so the connection is established (and
+// cached) on the first request that needs it.
+// CORS first, so preflight requests never touch the database
+app.use(cors());
+
+app.use(async (req, res, next) => {
+  if (req.method === "OPTIONS") return next();
+
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection failed:", error.message);
+    res.status(503).json({
+      success: false,
+      message:
+        "Database unavailable. Check MONGODB_URI and that your host's IP is " +
+        "allowed in MongoDB Atlas (Network Access).",
+    });
+  }
+});
 
 app.use(
   "/api/stripe",
@@ -31,7 +51,6 @@ app.use(
 
 // Middleware
 app.use(express.json());
-app.use(cors());
 
 
 
@@ -106,6 +125,12 @@ app.use('/api/admin', adminRouter)
 app.use('/api/user', userRouter)
  
 
-app.listen(port, () =>
-  console.log(`Server listening at http://localhost:${port}`)
-);
+// Vercel imports the app and handles the HTTP layer itself; only listen
+// when running as a normal process.
+if (!process.env.VERCEL) {
+  app.listen(port, () =>
+    console.log(`Server listening at http://localhost:${port}`)
+  );
+}
+
+export default app;
