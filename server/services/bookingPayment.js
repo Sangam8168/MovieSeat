@@ -69,13 +69,14 @@ export const stillPayable = async (booking) => {
   }
 };
 
-// Seats are held the moment a booking is created. If the payment is never
-// completed, this frees them again. Runs on demand rather than on a schedule,
-// so it works without Inngest or a working webhook.
-const HOLD_MINUTES = Number(process.env.SEAT_HOLD_MINUTES) || 10;
+// One value drives both the seat hold and the Stripe session expiry, so a
+// checkout page can never outlive the seats it reserved.
+// Stripe requires expires_at to be at least 30 minutes out, which sets the floor.
+export const holdMinutes = () =>
+  Math.max(30, Number(process.env.SEAT_HOLD_MINUTES) || 30);
 
 export const releaseStaleBookings = async (showId) => {
-  const cutoff = new Date(Date.now() - HOLD_MINUTES * 60 * 1000);
+  const cutoff = new Date(Date.now() - holdMinutes() * 60 * 1000);
 
   const stale = await Booking.find({
     show: showId,

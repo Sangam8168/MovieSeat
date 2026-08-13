@@ -2,6 +2,7 @@ import Movie from "../models/Movie.js";
 import Booking from "../models/Booking.js";
 import { reconcileBookings } from "../services/reconcile.js";
 import {
+  holdMinutes,
   releaseBooking,
   stillPayable,
 } from "../services/bookingPayment.js";
@@ -24,8 +25,7 @@ export const getUserBookings = async (req, res) => {
 
     // Anything still unpaid past the hold window was abandoned - drop it
     // and free its seats.
-    const holdMinutes = Number(process.env.SEAT_HOLD_MINUTES) || 10;
-    const cutoff = Date.now() - holdMinutes * 60 * 1000;
+    const cutoff = Date.now() - holdMinutes() * 60 * 1000;
 
     const expired = bookings.filter(
       (b) => !b.isPaid && new Date(b.createdAt).getTime() < cutoff

@@ -1,5 +1,6 @@
 import { sendEvent } from "../inngest/index.js";
 import {
+  holdMinutes,
   markBookingPaid,
   releaseStaleBookings,
 } from "../services/bookingPayment.js";
@@ -98,7 +99,7 @@ export const createBooking = async (req, res) => {
           },
         ],
         metadata: { bookingId: booking._id.toString() },
-        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+        expires_at: Math.floor(Date.now() / 1000) + holdMinutes() * 60,
       });
     } catch (stripeError) {
       console.error("Stripe checkout failed:", stripeError.message);
