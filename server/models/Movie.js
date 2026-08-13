@@ -1,0 +1,28 @@
+import mongoose from "mongoose";
+
+const movieSchema = new mongoose.Schema(
+  {
+    _id: { type: String, required: true },
+    title: { type: String, required: true },
+    overview: { type: String, default: "" },
+    poster_path: { type: String, default: "" },
+    // Ordered poster fallbacks, walked by SmartImage on load failure
+    poster_candidates: { type: [String], default: [] },
+    backdrop_candidates: { type: [String], default: [] },
+    backdrop_path: { type: String, default: "" },
+    release_date: { type: String, default: "" },
+    original_language: { type: String, default: "" },
+    tagline: { type: String, default: "" },
+    genres: { type: Array, default: [] },
+    casts: { type: Array, default: [] },
+    trailer_video_id: { type: String, default: "" },
+    vote_average: { type: Number, default: 0 },
+    vote_count: { type: Number, default: 0 },
+    runtime: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+const Movie = mongoose.model("Movie", movieSchema);
+
+export default Movie;

@@ -1,0 +1,6 @@
+node_modules
+
+# Never commit real credentials
+.env
+.env.*
+!.env.example

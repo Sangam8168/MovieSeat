@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google Sign-In diagnostic</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#111; color:#eee;
+           display:flex; flex-direction:column; align-items:center;
+           gap:18px; padding:48px 20px; }
+    code { background:#222; padding:2px 6px; border-radius:4px; color:#7dd3fc; }
+    .card { background:#1b1b1b; border:1px solid #333; border-radius:12px;
+            padding:20px 24px; max-width:640px; width:100%; }
+    h1 { font-size:20px; margin:0 0 6px; }
+    p  { margin:6px 0; line-height:1.55; font-size:14px; color:#bbb; }
+    #log { white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:12px;
+           background:#0c0c0c; border:1px solid #333; border-radius:8px;
+           padding:12px; max-width:640px; width:100%; min-height:90px; color:#9ca3af; }
+    .ok   { color:#4ade80; }
+    .bad  { color:#f87171; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Google Sign-In diagnostic</h1>
+    <p>This page uses plain HTML — no React, no build step. If the button works
+       here but not in the app, the problem is in the app. If it fails here too,
+       the problem is the Google Cloud Console configuration.</p>
+    <p>This page's origin is <code id="origin"></code>.<br>
+       That exact string must appear under <b>Authorised JavaScript origins</b>.</p>
+  </div>
+
+  <div id="btn"></div>
+  <div id="log">Loading Google script…</div>
+
+  <script>
+    const CLIENT_ID = "858964442836-31p1te7s3ec72c73miduh2prj8aeina2.apps.googleusercontent.com";
+
+    const logEl = document.getElementById('log');
+    const log = (msg, cls) =>
+      logEl.innerHTML += `\n<span class="${cls || ''}">${msg}</span>`;
+
+    const originEl = document.getElementById('origin');
+    originEl.textContent = window.location.origin;
+    if (window.location.protocol === 'file:') {
+      originEl.textContent = 'file:// (opened from disk - will not work)';
+      originEl.style.color = '#f87171';
+    }
+
+    // Surface GSI's own console errors on the page
+    const origError = console.error;
+    console.error = (...args) => {
+      log('console.error: ' + args.join(' '), 'bad');
+      origError.apply(console, args);
+    };
+
+    window.onload = () => {
+      // Google rejects any page loaded straight from disk: a file:// page has
+      // no real origin, so it can never appear in Authorised JavaScript origins.
+      if (window.location.protocol === 'file:') {
+        logEl.innerHTML =
+          '<span class="bad">✗ This page was opened directly from disk '
+          + '(origin=file://).</span>\n\n'
+          + 'Google Sign-In cannot work over file:// - there is no origin to authorise.\n\n'
+          + 'Start the client instead:\n'
+          + '   cd client && npm run dev\n\n'
+          + 'then open:\n'
+          + '   http://localhost:5173/google-test.html';
+        document.getElementById('btn').style.display = 'none';
+        return;
+      }
+
+      if (!window.google?.accounts?.id) {
+        log('✗ Google script did not load (network/adblocker?)', 'bad');
+        return;
+      }
+      logEl.textContent = 'Google script loaded.';
+
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: (res) => {
+          const payload = JSON.parse(atob(res.credential.split('.')[1]));
+          log('✓ SUCCESS — signed in as ' + payload.email, 'ok');
+          log('   aud (client ID Google issued this for):', '');
+          log('   ' + payload.aud, '');
+        },
+      });
+
+      google.accounts.id.renderButton(document.getElementById('btn'), {
+        theme: 'filled_black', size: 'large', shape: 'pill', width: 320,
+      });
+
+      setTimeout(() => {
+        const rendered = document.getElementById('btn').childElementCount > 0;
+        log(rendered
+          ? '✓ Button rendered. Click it to test the full round trip.'
+          : '✗ Button did NOT render — this origin is almost certainly not in '
+            + 'Authorised JavaScript origins for this client ID.',
+          rendered ? 'ok' : 'bad');
+      }, 3000);
+    };
+  </script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
