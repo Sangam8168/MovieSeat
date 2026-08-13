@@ -1,6 +1,7 @@
 import Movie from "../models/Movie.js";
 import Booking from "../models/Booking.js";
 import { reconcileBookings } from "../services/reconcile.js";
+import { releaseBooking } from "../services/bookingPayment.js";
 
 // API Controller Function to Get User Bookings
 export const getUserBookings = async (req, res) => {
@@ -14,11 +15,27 @@ export const getUserBookings = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    // A booking can be paid at Stripe but still marked unpaid here if the
-    // webhook never arrived, so verify any that are still outstanding.
+    // Reconcile first: a booking may be paid at Stripe but still marked
+    // unpaid here, and it must not be mistaken for an abandoned one.
     await reconcileBookings(bookings);
 
-    res.json({ success: true, bookings });
+    // Anything still unpaid past the hold window was abandoned - drop it
+    // and free its seats.
+    const holdMinutes = Number(process.env.SEAT_HOLD_MINUTES) || 10;
+    const cutoff = Date.now() - holdMinutes * 60 * 1000;
+
+    const abandoned = bookings.filter(
+      (b) => !b.isPaid && new Date(b.createdAt).getTime() < cutoff
+    );
+
+    for (const booking of abandoned) {
+      await releaseBooking(booking._id);
+    }
+
+    const abandonedIds = new Set(abandoned.map((b) => String(b._id)));
+    const active = bookings.filter((b) => !abandonedIds.has(String(b._id)));
+
+    res.json({ success: true, bookings: active });
   } catch (error) {
     console.error(error.message);
     res.json({ success: false, message: error.message });
