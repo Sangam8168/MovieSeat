@@ -45,7 +45,6 @@ export const createBooking = async (req, res) => {
       return res.json({ success: false, message: "Show not found" });
     }
 
-    // Checked before anything is written, so no rollback is needed
     const amount = showData.showPrice * selectedSeats.length;
     const minCharge = Number(process.env.MIN_SHOW_PRICE) || 50;
 
@@ -72,9 +71,7 @@ export const createBooking = async (req, res) => {
 
     await showData.save();
 
-    // Stripe can reject the session (unsupported currency, bad key, amount
-    // below the minimum). The booking and seat hold already exist by now, so
-    // undo both rather than leaving the seats locked for the next attempt.
+    // The booking and seat hold already exist, so undo both if Stripe rejects.
     let session;
     try {
       const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
@@ -86,7 +83,7 @@ export const createBooking = async (req, res) => {
         line_items: [
           {
             price_data: {
-              // Stripe expects the smallest unit, so INR amounts are in paise
+              // Amounts are in the smallest unit (paise for INR)
               currency: process.env.CURRENCY || "inr",
               product_data: { name: showData.movie.title },
               unit_amount: Math.round(booking.amount * 100),
@@ -142,8 +139,7 @@ export const getOccupiedSeats = async (req, res) => {
   }
 };
 
-// Asks Stripe directly whether a checkout session was paid, so a booking
-// confirms even if the webhook is misconfigured or delayed.
+// Confirms payment directly with Stripe, independent of the webhook.
 export const confirmBooking = async (req, res) => {
   try {
     const { sessionId } = req.params;

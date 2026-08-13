@@ -1,12 +1,8 @@
 import stripe from "stripe";
 import { markBookingPaid, releaseBooking } from "../services/bookingPayment.js";
 
-/**
- * Stripe verifies the signature against the exact raw bytes. Locally
- * express.raw() supplies a Buffer, but some serverless runtimes parse the
- * JSON before Express runs, so fall back to whatever raw form is available.
- * Returns null when the body has already been parsed and is unrecoverable.
- */
+// Stripe verifies against the exact raw bytes, and some serverless runtimes
+// parse the body before Express sees it. Returns null if it is unrecoverable.
 const getRawBody = (request) => {
   if (Buffer.isBuffer(request.body)) return request.body;
   if (Buffer.isBuffer(request.rawBody)) return request.rawBody;
@@ -50,8 +46,7 @@ export const stripeWebhooks = async (request, response) => {
     const bookingId = session?.metadata?.bookingId;
 
     switch (event.type) {
-      // Cards settle immediately. UPI and other async methods arrive here
-      // still unpaid, and confirm later via async_payment_succeeded.
+      // Cards settle here; UPI arrives unpaid and confirms later.
       case "checkout.session.completed": {
         if (session.payment_status === "paid") {
           await markBookingPaid(bookingId);

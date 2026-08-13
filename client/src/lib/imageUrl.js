@@ -14,12 +14,8 @@ export const POSTER_PLACEHOLDER =
      </svg>`
   );
 
-/**
- * IMDb/Amazon image URLs carry a transform chain before the extension, e.g.
- *   ..._V1_QL75_UX380_CR0,1,380,562_.jpg   ->  380px wide, JPEG quality 75
- * Rewriting it requests a larger, better-quality render of the same image.
- * Any non-Amazon URL is returned untouched.
- */
+// Rewrites the IMDb/Amazon transform chain to request a larger render.
+// Non-Amazon URLs are returned untouched.
 export const resizeImage = (url, width = 1280) => {
   if (!url || typeof url !== "string") return url;
   if (!/m\.media-amazon\.com|ia\.media-imdb\.com/.test(url)) return url;

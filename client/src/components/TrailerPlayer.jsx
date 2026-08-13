@@ -3,10 +3,8 @@ import { motion } from 'framer-motion'
 import { PlayCircleIcon } from 'lucide-react'
 import { EASE } from './motion/Reveal'
 
-// Kept out of any animated/transformed element: Chrome re-composites iframes
-// whose ancestors carry a transform, which interrupts playback.
-// Width is capped but kept generous - YouTube picks quality from the rendered
-// player size, so going much smaller costs resolution.
+// Kept outside any transformed element: Chrome re-composites iframes whose
+// ancestors carry a transform, which interrupts playback.
 const Frame = memo(function Frame({ videoId, title }) {
   return (
     <iframe
@@ -23,8 +21,7 @@ const Frame = memo(function Frame({ videoId, title }) {
   )
 })
 
-// 16:9 trailer. Shows the YouTube thumbnail until clicked, so the page
-// doesn't load a player for every visitor.
+// Loads the player only on click.
 const TrailerPlayer = ({ videoId, title = '' }) => {
   const [playing, setPlaying] = useState(false)
 

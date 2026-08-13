@@ -27,11 +27,8 @@ const loadGsiScript = () =>
     document.head.appendChild(script)
   })
 
-// Renders Google's official "Sign in with Google" button. Google returns an
-// ID token which the backend verifies before issuing our own JWT.
-//
-// GSI renders nothing and throws nothing when it rejects a config, so the
-// container is watched and the likely cause reported.
+// Google returns an ID token which the backend verifies before issuing a JWT.
+// GSI fails silently on a bad config, so the container is watched.
 const GoogleLoginButton = ({ onSuccess }) => {
   const { googleLogin } = useAppContext()
   const containerRef = useRef(null)
@@ -39,7 +36,6 @@ const GoogleLoginButton = ({ onSuccess }) => {
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-  // Keep the latest callback in a ref so GSI always calls the current version
   const handlerRef = useRef()
   handlerRef.current = async (response) => {
     const ok = await googleLogin(response.credential)
@@ -93,7 +89,6 @@ const GoogleLoginButton = ({ onSuccess }) => {
           width: 320,
         })
 
-        // GSI renders asynchronously; nothing appearing means a rejected config
         const startedAt = Date.now()
         const verifyRendered = () => {
           if (cancelled || !containerRef.current) return
@@ -125,7 +120,6 @@ const GoogleLoginButton = ({ onSuccess }) => {
 
   return (
     <div className='flex flex-col items-center gap-2'>
-      {/* Kept mounted at all times so GSI always has a target to render into */}
       <div ref={containerRef} className='flex justify-center min-h-[44px]' />
 
       {error && (

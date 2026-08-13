@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
-// Stripe returns here after checkout. Rather than waiting a fixed delay and
-// hoping the webhook fired, ask the server to confirm the payment directly.
+// Stripe returns here after checkout; confirms the payment before moving on.
 const Loading = () => {
   const { nextUrl } = useParams();
   const [searchParams] = useSearchParams();
@@ -19,7 +18,6 @@ const Loading = () => {
       if (!cancelled && nextUrl) navigate("/" + nextUrl);
     };
 
-    // No session id means this wasn't a payment return; just move on.
     if (!sessionId) {
       const t = setTimeout(go, 3000);
       return () => {
@@ -38,7 +36,7 @@ const Loading = () => {
 
         if (data.success && data.isPaid) return go();
 
-        // UPI and other async methods settle a little later - retry briefly
+        // Async methods settle a little later
         if (attempt < 5) {
           setMessage("Waiting for payment confirmation...");
           setTimeout(() => confirm(attempt + 1), 2000);

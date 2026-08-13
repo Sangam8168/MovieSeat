@@ -8,8 +8,7 @@ const initials = (name = '') =>
     .slice(0, 2)
     .join('')
 
-// Shows a headshot when one is available, falling back to initials if the
-// image is missing or fails to load.
+// Falls back to initials when there is no headshot.
 const CastAvatar = ({ name, src, character }) => {
   const [failed, setFailed] = useState(false)
   const showImage = src && !failed

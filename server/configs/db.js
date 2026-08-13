@@ -19,8 +19,7 @@ export const buildMongoUri = (raw, dbName = DB_NAME) => {
   return query ? `${withDb}?${query}` : withDb;
 };
 
-// Serverless functions reuse the process between invocations, so the
-// connection is cached on globalThis to avoid opening a new pool per request.
+// Cached so serverless invocations reuse one connection pool.
 const cache = globalThis._mongoose ?? (globalThis._mongoose = {
   conn: null,
   promise: null,
@@ -42,11 +41,10 @@ const connectDB = async () => {
     cache.promise = mongoose
       .connect(uri, {
         serverSelectionTimeoutMS: 15000,
-        // Keep the pool small; serverless spreads load across many instances
         maxPoolSize: 10,
       })
       .catch((error) => {
-        cache.promise = null; // let the next request retry
+        cache.promise = null;
         throw error;
       });
   }

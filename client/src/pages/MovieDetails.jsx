@@ -40,9 +40,8 @@ const MovieDetails = () => {
     restDelta: 0.001,
   })
 
-  // Section is 260vh, so the poster stays pinned until progress 0.62.
-  // The synopsis is fully in by 0.36, leaving a long hold where it sits
-  // complete on the poster before the page releases into the trailer.
+  // Section is 260vh: the poster stays pinned until progress 0.62, and the
+  // synopsis is fully in by 0.36, leaving a hold before the page releases.
   const posterScale = useTransform(smooth, [0, 0.62], [1.05, 1.18])
   const posterY = useTransform(smooth, [0, 0.62], [0, 60])
 
@@ -55,8 +54,7 @@ const MovieDetails = () => {
   const synopsisOpacity = useTransform(smooth, [0.12, 0.3], [0, 1])
   const synopsisY = useTransform(smooth, [0.12, 0.36], [60, 0])
 
-  // An element at opacity 0 still swallows clicks, so hand interactivity to
-  // whichever layer is actually visible.
+  // An element at opacity 0 still swallows clicks
   const titlePointer = useTransform(smooth, (v) => (v < 0.14 ? 'auto' : 'none'))
   const synopsisPointer = useTransform(smooth, (v) => (v > 0.2 ? 'auto' : 'none'))
 
@@ -102,7 +100,7 @@ const MovieDetails = () => {
 
   return (
     <div>
-      {/* ---------- Pinned poster: title fades out, synopsis fades in ---------- */}
+      {/* ---------- Pinned poster hero ---------- */}
       <section ref={heroRef} className='relative h-[260vh]'>
         <div className='sticky top-0 h-screen overflow-hidden'>
           <motion.div
@@ -125,13 +123,12 @@ const MovieDetails = () => {
           <div className='absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent' />
           <div className='absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent' />
 
-          {/* Darkens as you scroll, making room for the synopsis */}
           <motion.div
             style={{ opacity: scrimOpacity }}
             className='absolute inset-0 bg-black pointer-events-none'
           />
 
-          {/* Title block - fades out first */}
+          {/* Title */}
           <motion.div
             style={{ y: titleY, opacity: titleOpacity, pointerEvents: titlePointer }}
             className='absolute inset-0 z-10 flex flex-col justify-end pb-24 px-6 md:px-16 lg:px-40'
@@ -200,7 +197,7 @@ const MovieDetails = () => {
             </motion.div>
           </motion.div>
 
-          {/* Synopsis - fades in over the poster as the title clears */}
+          {/* Synopsis */}
           <motion.div
             style={{
               opacity: synopsisOpacity,
@@ -242,7 +239,6 @@ const MovieDetails = () => {
 
       {/* ---------- Details ---------- */}
       <div className='relative bg-black pt-24'>
-        {/* Full-bleed: outside the page gutters so it spans the viewport */}
         <TrailerPlayer videoId={movie.trailer_video_id} title={movie.title} />
       </div>
 

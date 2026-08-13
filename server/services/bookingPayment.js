@@ -2,8 +2,7 @@ import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import { sendEvent } from "../inngest/index.js";
 
-// Shared by the Stripe webhook and the on-return confirmation check.
-// Idempotent, so it is safe if both paths run for the same booking.
+// Idempotent: safe to call from both the webhook and the return check.
 export const markBookingPaid = async (bookingId) => {
   if (!bookingId) return false;
 

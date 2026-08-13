@@ -11,9 +11,7 @@ const SmartImage = ({
   width = 640,
   ...rest
 }) => {
-  // Accept either a candidates array or a plain src, de-duplicated.
-  // `width` asks IMDb/Amazon for a render at that size - their default is a
-  // low-quality 380px image, which looks soft on large surfaces.
+  // `width` requests a larger render from IMDb/Amazon
   const sources = useMemo(() => {
     const list = [...(candidates || []), src]
       .filter(Boolean)

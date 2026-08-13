@@ -20,13 +20,9 @@ import { stripeWebhooks } from "./controllers/stripeWebhooks.js";
 const app = express();
 const port = 3000;
 
-// Serverless has no startup phase, so the connection is established (and
-// cached) on the first request that needs it.
-// CORS first, so preflight requests never touch the database
 app.use(cors());
 
-// These must stay reachable when the database is down - they are how you
-// diagnose that it is down.
+// Reachable even when the database is down
 const NO_DB_REQUIRED = ["/", "/api/health"];
 
 app.use(async (req, res, next) => {
@@ -67,9 +63,6 @@ app.get("/api/health", async (req, res) => {
   const states = ["disconnected", "connected", "connecting", "disconnecting"];
   const googleId = process.env.GOOGLE_CLIENT_ID || "";
 
-  // Actively attempt the connection rather than reporting whatever state this
-  // instance happens to be in - a cold serverless instance always starts
-  // disconnected, which would make this endpoint useless.
   let dbError = null;
   try {
     await connectDB();
@@ -125,7 +118,6 @@ app.get("/api/health", async (req, res) => {
       OMDB_API_KEY: Boolean(process.env.OMDB_API_KEY),
       FANART_API_KEY: Boolean(process.env.FANART_API_KEY),
       YOUTUBE_API_KEY: Boolean(process.env.YOUTUBE_API_KEY),
-      RAPIDAPI_KEY: Boolean(process.env.RAPIDAPI_KEY),
       INNGEST_EVENT_KEY: Boolean(process.env.INNGEST_EVENT_KEY),
       GOOGLE_CLIENT_ID: googleId
         ? googleId.endsWith(".apps.googleusercontent.com")
@@ -143,8 +135,7 @@ app.use('/api/admin', adminRouter)
 app.use('/api/user', userRouter)
  
 
-// Vercel imports the app and handles the HTTP layer itself; only listen
-// when running as a normal process.
+// Vercel imports the app; only listen when run as a process.
 if (!process.env.VERCEL) {
   app.listen(port, () =>
     console.log(`Server listening at http://localhost:${port}`)
