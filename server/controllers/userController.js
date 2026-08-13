@@ -1,5 +1,6 @@
 import Movie from "../models/Movie.js";
 import Booking from "../models/Booking.js";
+import { reconcileBookings } from "../services/reconcile.js";
 
 // API Controller Function to Get User Bookings
 export const getUserBookings = async (req, res) => {
@@ -12,6 +13,10 @@ export const getUserBookings = async (req, res) => {
         populate: { path: "movie" },
       })
       .sort({ createdAt: -1 });
+
+    // A booking can be paid at Stripe but still marked unpaid here if the
+    // webhook never arrived, so verify any that are still outstanding.
+    await reconcileBookings(bookings);
 
     res.json({ success: true, bookings });
   } catch (error) {
