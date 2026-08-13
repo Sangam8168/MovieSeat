@@ -25,8 +25,13 @@ const port = 3000;
 // CORS first, so preflight requests never touch the database
 app.use(cors());
 
+// These must stay reachable when the database is down - they are how you
+// diagnose that it is down.
+const NO_DB_REQUIRED = ["/", "/api/health"];
+
 app.use(async (req, res, next) => {
   if (req.method === "OPTIONS") return next();
+  if (NO_DB_REQUIRED.includes(req.path)) return next();
 
   try {
     await connectDB();
