@@ -1,6 +1,6 @@
 # 🎬 MovieSeat - Movie Ticket Booking System
 
-## 🌐 Live Demo: [showtime-eta.vercel.app](https://showtime-eta.vercel.app/)
+## 🌐 Live Demo: [https://movie-seat-one.vercel.app/)
 
 ![MovieSeat Banner](https://raw.githubusercontent.com/maliha-yasmin-mim/SHOWTIME/main/Project_Screenshots/User_pages_image/01-Home_page/01-homepage.png)
 
