@@ -1,3 +1,4 @@
+import stripe from "stripe";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import { sendEvent } from "../inngest/index.js";
@@ -7,7 +8,14 @@ export const markBookingPaid = async (bookingId) => {
   if (!bookingId) return false;
 
   const booking = await Booking.findById(bookingId);
-  if (!booking) return false;
+  if (!booking) {
+    // The customer paid but the booking is gone - it was released while their
+    // checkout session was still open. Needs manual follow-up.
+    console.error(
+      `[payment] PAID BUT MISSING: booking ${bookingId} no longer exists`
+    );
+    return false;
+  }
   if (booking.isPaid) return true;
 
   booking.isPaid = true;
@@ -39,6 +47,28 @@ export const releaseBooking = async (bookingId) => {
   console.log(`[payment] booking ${bookingId} released`);
 };
 
+export const sessionIdFor = (booking) =>
+  booking.stripeSessionId ||
+  (String(booking.paymentLink || "").match(/(cs_(?:test|live)_[A-Za-z0-9]+)/) ||
+    [])[1] ||
+  null;
+
+// A session that is still "open" can still be paid, so its seats must stay
+// held even past the hold window - otherwise the customer pays for a booking
+// that no longer exists.
+export const stillPayable = async (booking) => {
+  const id = sessionIdFor(booking);
+  if (!id) return false;
+
+  try {
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+    const session = await stripeInstance.checkout.sessions.retrieve(id);
+    return session?.status === "open";
+  } catch {
+    return false;
+  }
+};
+
 // Seats are held the moment a booking is created. If the payment is never
 // completed, this frees them again. Runs on demand rather than on a schedule,
 // so it works without Inngest or a working webhook.
@@ -55,9 +85,14 @@ export const releaseStaleBookings = async (showId) => {
 
   if (stale.length === 0) return 0;
 
+  // Skip any whose checkout page is still live
+  const payable = await Promise.all(stale.map(stillPayable));
+  const releasable = stale.filter((_, i) => !payable[i]);
+  if (releasable.length === 0) return 0;
+
   const show = await Show.findById(showId);
   if (show) {
-    stale.forEach((booking) => {
+    releasable.forEach((booking) => {
       booking.bookedSeats.forEach((seat) => {
         delete show.occupiedSeats[seat];
       });
@@ -66,7 +101,9 @@ export const releaseStaleBookings = async (showId) => {
     await show.save();
   }
 
-  await Booking.deleteMany({ _id: { $in: stale.map((b) => b._id) } });
-  console.log(`[payment] released ${stale.length} stale booking(s) for show ${showId}`);
-  return stale.length;
+  await Booking.deleteMany({ _id: { $in: releasable.map((b) => b._id) } });
+  console.log(
+    `[payment] released ${releasable.length} stale booking(s) for show ${showId}`
+  );
+  return releasable.length;
 };

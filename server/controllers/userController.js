@@ -1,7 +1,10 @@
 import Movie from "../models/Movie.js";
 import Booking from "../models/Booking.js";
 import { reconcileBookings } from "../services/reconcile.js";
-import { releaseBooking } from "../services/bookingPayment.js";
+import {
+  releaseBooking,
+  stillPayable,
+} from "../services/bookingPayment.js";
 
 // API Controller Function to Get User Bookings
 export const getUserBookings = async (req, res) => {
@@ -24,9 +27,13 @@ export const getUserBookings = async (req, res) => {
     const holdMinutes = Number(process.env.SEAT_HOLD_MINUTES) || 10;
     const cutoff = Date.now() - holdMinutes * 60 * 1000;
 
-    const abandoned = bookings.filter(
+    const expired = bookings.filter(
       (b) => !b.isPaid && new Date(b.createdAt).getTime() < cutoff
     );
+
+    // Keep any whose checkout page is still live - the customer can still pay
+    const payable = await Promise.all(expired.map(stillPayable));
+    const abandoned = expired.filter((_, i) => !payable[i]);
 
     for (const booking of abandoned) {
       await releaseBooking(booking._id);

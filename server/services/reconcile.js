@@ -1,13 +1,5 @@
 import stripe from "stripe";
-import { markBookingPaid } from "./bookingPayment.js";
-
-// Bookings created before stripeSessionId existed still carry the checkout
-// URL, which contains the session id.
-const sessionIdFor = (booking) =>
-  booking.stripeSessionId ||
-  (String(booking.paymentLink || "").match(/(cs_(?:test|live)_[A-Za-z0-9]+)/) ||
-    [])[1] ||
-  null;
+import { markBookingPaid, sessionIdFor } from "./bookingPayment.js";
 
 // Asks Stripe whether any still-unpaid bookings have actually been paid.
 // Covers the case where neither the webhook nor the on-return check ran.
