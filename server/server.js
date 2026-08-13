@@ -66,6 +66,17 @@ app.get("/", (req, res) => res.send("Server is Live and best!"));
 app.get("/api/health", async (req, res) => {
   const states = ["disconnected", "connected", "connecting", "disconnecting"];
   const googleId = process.env.GOOGLE_CLIENT_ID || "";
+
+  // Actively attempt the connection rather than reporting whatever state this
+  // instance happens to be in - a cold serverless instance always starts
+  // disconnected, which would make this endpoint useless.
+  let dbError = null;
+  try {
+    await connectDB();
+  } catch (error) {
+    dbError = error.message;
+  }
+
   const connected = mongoose.connection.readyState === 1;
 
   let data = null;
@@ -104,7 +115,8 @@ app.get("/api/health", async (req, res) => {
     success: true,
     database: {
       state: states[mongoose.connection.readyState] ?? "unknown",
-      name: mongoose.connection.name || null,
+      name: connected ? mongoose.connection.name : null,
+      error: dbError,
     },
     data,
     env: {
