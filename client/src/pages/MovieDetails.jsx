@@ -9,6 +9,7 @@ import MovieCard from '../components/MovieCard'
 import Loading from '../components/Loading'
 import { useAppContext } from '../context/AppContext'
 import SmartImage from '../components/SmartImage'
+import CastAvatar from '../components/CastAvatar'
 import TrailerPlayer from '../components/TrailerPlayer'
 import Reveal, { StaggerGroup, StaggerItem, EASE } from '../components/motion/Reveal'
 import toast from 'react-hot-toast'
@@ -256,19 +257,12 @@ const MovieDetails = () => {
             <div className='overflow-x-auto mt-8 pb-4'>
               <StaggerGroup className='flex items-center gap-6 w-max' staggerChildren={0.08}>
                 {movie.casts.slice(0, 12).map((cast, index) => (
-                  <StaggerItem key={index} className='flex flex-col items-center text-center'>
-                    {cast.profile_path ? (
-                      <img
-                        src={imageUrl(cast.profile_path)}
-                        alt={cast.name}
-                        className='rounded-full h-20 w-20 aspect-square object-cover'
-                      />
-                    ) : (
-                      <div className='rounded-full h-20 w-20 aspect-square flex items-center justify-center bg-gray-800 border border-gray-700 text-lg font-semibold uppercase'>
-                        {cast.name?.split(' ').map((p) => p[0]).slice(0, 2).join('')}
-                      </div>
-                    )}
-                    <p className='font-medium text-xs mt-3 max-w-24 truncate'>{cast.name}</p>
+                  <StaggerItem key={index}>
+                    <CastAvatar
+                      name={cast.name}
+                      src={cast.profile_path ? imageUrl(cast.profile_path) : ''}
+                      character={cast.character}
+                    />
                   </StaggerItem>
                 ))}
               </StaggerGroup>

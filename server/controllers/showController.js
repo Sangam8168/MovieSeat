@@ -3,6 +3,7 @@ import Movie from "../models/Movie.js";
 import Show from "../models/Show.js";
 import { sendEvent } from "../inngest/index.js";
 import { findTrailerId, parseYoutubeId } from "../services/youtube.js";
+import { fetchCast } from "../services/imdbCast.js";
 import {
   fetchMovieDetails,
   fetchNowPlaying,
@@ -93,10 +94,14 @@ export const addShow = async (req, res) => {
       const trailerId =
         manualTrailerId || (await findTrailerId(details.title, details.year));
 
+      const cast = await fetchCast(movieId);
+
       movie = await Movie.create({
         ...details,
         _id: movieId,
         trailer_video_id: trailerId || "",
+        casts: cast.length ? cast : details.casts,
+        cast_enriched: cast.length > 0,
       });
     } else if (manualTrailerId && movie.trailer_video_id !== manualTrailerId) {
       // Movie already exists - let the admin correct or set its trailer
@@ -168,6 +173,15 @@ export const getShow = async (req, res) => {
     });
 
     const movie = await Movie.findById(movieId);
+
+    // One-off cast enrichment for movies saved before this existed.
+    // The flag stops us spending API quota on the same movie repeatedly.
+    if (movie && !movie.cast_enriched) {
+      const cast = await fetchCast(movie._id);
+      movie.cast_enriched = true;
+      if (cast.length) movie.casts = cast;
+      await movie.save();
+    }
 
     // Backfill the trailer for movies saved before this field existed
     if (movie && !movie.trailer_video_id) {

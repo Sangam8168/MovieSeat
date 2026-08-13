@@ -125,6 +125,7 @@ app.get("/api/health", async (req, res) => {
       OMDB_API_KEY: Boolean(process.env.OMDB_API_KEY),
       FANART_API_KEY: Boolean(process.env.FANART_API_KEY),
       YOUTUBE_API_KEY: Boolean(process.env.YOUTUBE_API_KEY),
+      RAPIDAPI_KEY: Boolean(process.env.RAPIDAPI_KEY),
       INNGEST_EVENT_KEY: Boolean(process.env.INNGEST_EVENT_KEY),
       GOOGLE_CLIENT_ID: googleId
         ? googleId.endsWith(".apps.googleusercontent.com")
