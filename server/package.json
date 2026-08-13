@@ -19,7 +19,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "google-auth-library": "^9.15.1",
-    "inngest": "^3.48.1",
+    "inngest": "^3.54.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.2",
     "nodemailer": "^7.0.12",
