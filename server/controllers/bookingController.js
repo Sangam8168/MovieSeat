@@ -1,4 +1,5 @@
 import { sendEvent } from "../inngest/index.js";
+import { markBookingPaid } from "../services/bookingPayment.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import stripe from "stripe";
@@ -79,7 +80,7 @@ export const createBooking = async (req, res) => {
       const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
       session = await stripeInstance.checkout.sessions.create({
-        success_url: `${origin}/loading/my-bookings`,
+        success_url: `${origin}/loading/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/my-bookings`,
         mode: "payment",
         line_items: [
@@ -137,6 +138,35 @@ export const getOccupiedSeats = async (req, res) => {
     res.json({ success: true, occupiedSeats });
   } catch (error) {
     console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Asks Stripe directly whether a checkout session was paid, so a booking
+// confirms even if the webhook is misconfigured or delayed.
+export const confirmBooking = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.json({ success: false, message: "Missing session id" });
+    }
+
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+    const session = await stripeInstance.checkout.sessions.retrieve(sessionId);
+    const bookingId = session?.metadata?.bookingId;
+
+    if (session?.payment_status === "paid") {
+      await markBookingPaid(bookingId);
+      return res.json({ success: true, isPaid: true });
+    }
+
+    res.json({
+      success: true,
+      isPaid: false,
+      status: session?.payment_status ?? "unknown",
+    });
+  } catch (error) {
+    console.error("confirmBooking:", error.message);
     res.json({ success: false, message: error.message });
   }
 };

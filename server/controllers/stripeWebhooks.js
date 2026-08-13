@@ -1,41 +1,5 @@
 import stripe from "stripe";
-import Booking from "../models/Booking.js";
-import Show from "../models/Show.js";
-import { sendEvent } from "../inngest/index.js";
-
-const markBookingPaid = async (bookingId) => {
-  if (!bookingId) return;
-
-  const booking = await Booking.findById(bookingId);
-  if (!booking || booking.isPaid) return; // already handled
-
-  booking.isPaid = true;
-  booking.paymentLink = "";
-  await booking.save();
-
-  await sendEvent({ name: "app/show.booked", data: { bookingId } });
-  console.log(`[stripe] booking ${bookingId} marked paid`);
-};
-
-// Frees the held seats when a payment fails or expires
-const releaseBooking = async (bookingId) => {
-  if (!bookingId) return;
-
-  const booking = await Booking.findById(bookingId);
-  if (!booking || booking.isPaid) return;
-
-  const show = await Show.findById(booking.show);
-  if (show) {
-    booking.bookedSeats.forEach((seat) => {
-      delete show.occupiedSeats[seat];
-    });
-    show.markModified("occupiedSeats");
-    await show.save();
-  }
-
-  await Booking.findByIdAndDelete(bookingId);
-  console.log(`[stripe] booking ${bookingId} released`);
-};
+import { markBookingPaid, releaseBooking } from "../services/bookingPayment.js";
 
 /**
  * Stripe verifies the signature against the exact raw bytes. Locally
