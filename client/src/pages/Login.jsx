@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
 import BlurCircle from '../components/BlurCircle'
+import GoogleLoginButton from '../components/GoogleLoginButton'
 
 const Login = () => {
-  const { login, register, googleLogin } = useAppContext();
+  const { login, register } = useAppContext();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -12,38 +13,6 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Load Google Sign-In script and initialize
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            const success = await googleLogin(response.credential);
-            if (success) {
-              navigate('/');
-            }
-          },
-        });
-
-        // Render the Google Sign-In button
-        window.google.accounts.id.renderButton(
-          document.getElementById('google-signin-button'),
-          { theme: 'outline', size: 'large', width: '100%' }
-        );
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, [googleLogin, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -121,7 +90,7 @@ const Login = () => {
           </div>
         </div>
 
-        <div id='google-signin-button' className='flex justify-center'></div>
+        <GoogleLoginButton onSuccess={() => navigate('/')} />
 
         <p className='text-sm text-center text-gray-400'>
           {mode === 'login'
