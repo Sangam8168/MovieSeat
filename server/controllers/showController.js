@@ -141,16 +141,23 @@ export const getShows = async (req, res) => {
       .populate("movie")
       .sort({ showDateTime: 1 });
 
-    // Dedupe by movie id
-    const uniqueShows = Array.from(
-      new Map(
-        shows
-          .filter((show) => show.movie)
-          .map((show) => [String(show.movie._id), show.movie])
-      ).values()
-    );
+    // Dedupe by movie id, carrying the cheapest showtime price for each
+    const byMovie = new Map();
 
-    res.json({ success: true, shows: uniqueShows });
+    for (const show of shows) {
+      if (!show.movie) continue;
+
+      const id = String(show.movie._id);
+      const existing = byMovie.get(id);
+
+      if (!existing) {
+        byMovie.set(id, { ...show.movie.toObject(), showPrice: show.showPrice });
+      } else if (show.showPrice < existing.showPrice) {
+        existing.showPrice = show.showPrice;
+      }
+    }
+
+    res.json({ success: true, shows: Array.from(byMovie.values()) });
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: error.message });

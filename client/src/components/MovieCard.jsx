@@ -9,6 +9,7 @@ import SmartImage from './SmartImage';
 const MovieCard = ({ movie }) => {
     const navigate = useNavigate();
     const { imageUrl } = useAppContext();
+    const currency = import.meta.env.VITE_CURRENCY;
 
     // Pointer-tracked 3D tilt
     const mouseX = useMotionValue(0);
@@ -84,10 +85,19 @@ const MovieCard = ({ movie }) => {
                     >
                         Buy Tickets
                     </motion.button>
-                    <p className='flex items-center gap-1 text-sm text-gray-400 mt-1 pr-1'>
-                        <StarIcon className='w-4 h-4 text-primary fill-primary' />
-                        {movie.vote_average.toFixed(1)}
-                    </p>
+
+                    <div className='flex items-center gap-3'>
+                        {movie.showPrice != null && (
+                            <p className='text-sm font-semibold'>
+                                {currency}
+                                {movie.showPrice}
+                            </p>
+                        )}
+                        <p className='flex items-center gap-1 text-sm text-gray-400'>
+                            <StarIcon className='w-4 h-4 text-primary fill-primary' />
+                            {movie.vote_average.toFixed(1)}
+                        </p>
+                    </div>
                 </div>
             </div>
         </motion.div>
