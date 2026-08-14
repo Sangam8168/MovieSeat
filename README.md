@@ -12,29 +12,27 @@
 ## ✨ Features
 
 ### 🎫 User Features
-- ✅ Browse latest movies with real-time data from TMDB
-- ✅ View movie details, cast, trailers, and showtimes
+- ✅ Browse latest movies with real-time data from OMDB
+- ✅ View movie details, cast, trailers, and book movie seats.
 - ✅ Interactive seat selection with real-time availability
 - ✅ Secure booking with Stripe payment integration
 - ✅ Favorite movies system
 - ✅ Booking history and management
-- ✅ Email notifications for bookings and reminders
 - ✅ Responsive design for all devices
 
 ### 👑 Admin Features
 - 📊 Dashboard with analytics (revenue, bookings, users)
-- 🎬 Add new movie shows with TMDB integration
+- 🎬 Add new movie shows with OMDB integration
 - 📋 Manage all shows and bookings
 - 👥 View user statistics
 - 🔐 Role-based access control
 
 ### ⚙️ System Features
 - 🔄 Automated seat release for unpaid bookings
-- 📧 Automated email notifications (booking confirmations, reminders)
 - 🕐 Background job processing with Inngest
 - 🔐 Secure JWT-based authentication (email + password, or Sign in with Google)
 - 💳 Secure payment processing with Stripe
-- 🎥 Real movie data from TMDB API
+- 🎥 Real movie data from OMDB API
 
 ## 🖼️ Screenshots
 ## ✨User Pages
@@ -91,7 +89,7 @@
 - **MongoDB** - Database
 - **Mongoose** - ODM
 - **Stripe** - Payment Processing
-- **TMDB API** - Movie Database
+- **OMDB API** - Movie Database
 - **Inngest** - Background Jobs
 - **Nodemailer** - Email Service
 - **JWT + bcrypt** - Authentication
@@ -128,7 +126,7 @@ movieseat/
 - Node.js (v18 or higher)
 - MongoDB Atlas account
 - Stripe account
-- TMDB API key
+- OMDB API key
 
 ### Backend Setup
 ```bash
@@ -168,7 +166,7 @@ cp .env.example .env
 
 # VITE_BASE_URL=http://localhost:3000
 # VITE_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p/original
-# VITE_CURRENCY=USD
+# VITE_CURRENCY=₹
 # VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 
 # Start the development server
@@ -195,16 +193,9 @@ SENDER_EMAIL=your_sender_email
 ```env
 VITE_BASE_URL=http://localhost:3000
 VITE_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p/original
-VITE_CURRENCY=USD
+VITE_CURRENCY=₹
 VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 ```
-
-### 🔑 Google Sign-In setup
-1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth 2.0 Client ID** of type **Web application**.
-2. Under **Authorised JavaScript origins** add your frontend origins, e.g. `http://localhost:5173` and your production domain.
-3. Copy the generated Client ID into **both** `GOOGLE_CLIENT_ID` (server) and `VITE_GOOGLE_CLIENT_ID` (client) - they must match, or token verification will fail.
-
-No client *secret* is needed: the browser obtains a Google ID token, and the server verifies it directly with Google before issuing its own JWT.
 
 ## 📚 API Endpoints
 
@@ -247,78 +238,11 @@ No client *secret* is needed: the browser obtains a Google ID token, and the ser
 - Webhook handling for payment verification
 - Automated booking confirmation
 
-### Email System
-- Booking confirmation emails
-- Payment reminder emails
-- Show reminder emails (8 hours before)
-- New show notification emails
-
 ### Background Jobs
 - Automated seat cleanup
 - Email scheduling
 - Custom JWT authentication with role-based admin access
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👩‍💻 Developer
-
-**Maliha Yasmin Mim**  
-- Full Stack Developer  
-- MERN Stack Specialist  
-- Passionate about building scalable web applications  
-
-📧 Email: malihayasmin01.official@gmail.com  
-🐙 GitHub: [github.com/malihayasminmim](https://github.com/maliha-yasmin-mim)
-
-
-**Sanjana Afroj Faria**  
-- Full Stack Developer  
-- MERN Stack Specialist  
-- Passionate about building scalable web applications  
-
-
-📧 Email: malihayasmin01.official@gmail.com  
-
-
-## 🙏 Acknowledgments
-
-- [TMDB](https://www.themoviedb.org/) for movie data API
-- [Stripe](https://stripe.com/) for payment processing
-- [Inngest](https://www.inngest.com/) for background jobs
-- [Brevo](https://www.brevo.com/) for email service
-
-## 🚀 Deployment
-
-### Frontend (Vercel)
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-```
-
-### Backend (Railway/Render)
-1. Connect your GitHub repository
-2. Set environment variables
-3. Deploy the application
-
-### Database (MongoDB Atlas)
-1. Create a free cluster
-2. Whitelist IP addresses
-3. Get connection string
-
----
 
 **Happy Coding!** 🎬🍿
 
